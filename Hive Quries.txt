@@ -1,0 +1,243 @@
+# Create internal(ACID) and External table
+create table internal_table(
+sno int,
+user_name string,
+city string)
+ROW FORMAT delimited fields termineted by ','
+LINES TERMINATED BY '\n' STORED AS TEXTFILE:
+
+load data local inpath '/home/user/data/emp.txt' into table internal_table;
+hadoop fs put /home/user/demo.txt /user/hive/warehouse/test.db/demo/demo2.txt;
+load data inpath '/fs_demo.txt' into table demo1;
+
+Create external table external_table(
+sno int,
+user_name string,
+amt string)
+ROW FORMAT delimited fields terminated by ','
+LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+--------------------------------------------------------------------------------------------------------------
+# Static and Dynamic partition 
+create table static_table(
+sno int,
+user_name string)
+partitioned by (city string);
+
+insert into table static_table partition (city='chennai') select sno, user_name from demo where city in ('chennai');
+
+select * from static_table;
+show partitions static_data;
+show create table static_table;
+--------------------------------------------------
+===> set hive.exec.dynamic.partition.mode=nonstrict;
+create table dynamic_table(
+sno int,
+user_name string)
+partitioned by (city string);
+
+insert into table dynamin_table partition (city) select sno, user_name, city from demo where city in ('chennai');
+
+--------------------------------------------------------------------------------------------------------------
+
+# Bucket(hash partition algorithum)
+
+set hive.exec.dynamic.partition=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.enforce.bucketing = true;
+
+create table bk_table(
+sno int,
+user_name string,
+amt string)
+COMMIT 'creating bucket table in demo table'
+CLUSTERED BY (amt) INTO 3 BUCKETS STORED AS TEXTFILE;
+
+insert into table bk_table select * from demo;
+-------------------------------------------------------------------------------------------------------------
+#### Partition and Bucket 
+create table pa_bk(
+sno int,
+user_name string)
+partitioned (city string)
+CLUSTERED BY (sno) INTO 3 BUCKETS STORED AS orc;
+
+insert into table pa_bk select sno, user_name,city from demo where city='chennai';
+
+-----------------------------------------------------------------------------------------------------
+#ORC
+create table orc_table(
+sno int,
+user_name string,
+city string)
+ROW FORMAT delimited fields terminated by ','
+LINES TERMINATED BY '\n' STORED AS orc;
+
+insert into table orc_table select * from demo;
+----------------------------------------------------------------------------------------------------
+#ACID
+create table acid_table(
+sno int,
+user_name string,
+city string)
+CLUSTERED BY (city) INTO 3 BUCKETS
+ROW FORMAT delimited fields terminated by ','
+LINES TERMINATED BY '\n' STORED AS orc TBLPROPERTIES('terminactional'='true';
+
+insert into acid_table (sno,user_name,city) values (1,'uchugowni','bglr');
+
+update acid_table set city='chennai' where sno=1;
+
+------------------------------------------------------------------------------------------------------
+
+1. Internal and external table with load data
+
+create table test.demo(
+sno int,
+user_name string,
+city string)
+ROW FORMAT delimited fields terminated by ','
+LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+
+load data local inpath '/home/user/demo.txt' into table demo;
+hadoop fs -put /home/user/demo.txt /user/hive/warehouse/test.db/demo.txt
+load data inpath '/user/hive/warehouse/test.db/demo.txt' into table demo;
+
+insert into table test.demo (sno,username,city) values (2,'babu','bglr');
+select * from test.demo;
+show create table test.demo;
+desc test.demo;
+desc extended test.demo;
+show functions;
+
+create EXTERNAL table test.external(
+sno int,
+user_name string,
+city string)
+ROW FORMAT delimited fields terminated by ','
+LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+
+------------------------------------------------------------------------------
+2. static and dynamic partitions
+
+create table static(
+sno int,
+user_name string)
+partitioned by (city string);
+
+insert into table static partition (city='chennai') select sno, username from demo where city='chennai';
+show create table static;
+show partitions static;
+
+set hive.exec.dynamic.partition.mode=nonstrict;
+
+create table dynamic(
+sno int,
+user_name string)
+partitioned by (city string);
+
+insert into table dynamic partition (city) select sno, user_name, city from demo where city='chennai';
+------------------------------------------------------------------------------------
+3. buckets
+
+create table buckets(
+sno int,
+user_name string,
+city string)
+COMMIT 'a use bucket'
+CLUSTERED BY (city) INTO 3 BUCKETS
+ROW FORMAT delimited fields terminated by ','
+LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+
+insert into table bucket select * from demo;
+show create table bucket
+show partition bucket
+-----------------------------------------------------------------------------------
+4. Partition and buckets 
+
+create table pa_bk(
+sno int,
+user_name string)
+partitioned by (city string)
+CLUSTERED BY (sno) INTO 3 BUCKETS
+ROW FORMAT delimited fields terminated by ','
+LINES TERMINATED BY '\n' STORED AS TEXTFILE;
+
+insert into table pa_bk partition (city='chennai') select sno, username from demo where city='chennai';
+show create table pa_bk
+show partition pa_bk
+
+------------------------------------------------------------------------------------
+5. orc file
+
+create table orc(
+sno int,
+user_name string,
+city string)
+ROW FORMAT delimited fields terminated by ','
+LINES TERMINATED BY '\n' STORED AS orc;
+
+insert into table orc select * from demo;
+select * from orc;
+select count(*) from orc where city='';
+
+-----------------------------------------------------------------------------------
+6. Acid file 
+
+create table acid(
+sno int,
+user_name string,
+city string)
+CLUSTERED BY (city) INTO 3 BUCKETS
+ROW FORMAT delimited fields terminated by ','
+LINES TERMINATED BY '\n' STORED AS orc TBLPROPERTIES ('terminactions'='true');
+
+insert into acid (sno,user_name,city) values (5,'babu','bglr')
+update acid set city='chennai' where sno=5;
+select * from acid
+show create table acid;
+desc extended acid
+desc acid
+---------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
